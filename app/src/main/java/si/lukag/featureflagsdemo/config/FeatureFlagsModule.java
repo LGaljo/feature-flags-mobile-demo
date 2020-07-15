@@ -1,18 +1,23 @@
 package si.lukag.featureflagsdemo.config;
 
-import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
 import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.UUID;
 
 import retrofit2.Call;
@@ -25,6 +30,7 @@ import si.lukag.featureflagsdemo.services.HeartbeatReceiver;
 import static si.lukag.featureflagsdemo.config.Config.APP_ID;
 import static si.lukag.featureflagsdemo.config.Config.BASE_URL;
 import static si.lukag.featureflagsdemo.config.Config.sp_clientId;
+import static si.lukag.featureflagsdemo.config.Config.sp_featureFlagsMap;
 import static si.lukag.featureflagsdemo.config.Config.sp_name;
 
 public class FeatureFlagsModule {
@@ -36,6 +42,8 @@ public class FeatureFlagsModule {
 
     private Retrofit retrofit = RetrofitFactory.getInstance(BASE_URL);
     private APICalls apiCalls = retrofit.create(APICalls.class);
+
+    private static HashMap<String, Integer> features;
 
     public static FeatureFlagsModule getInstance(Context context) {
         if (ffm == null) {
@@ -55,6 +63,94 @@ public class FeatureFlagsModule {
         } else {
             clientID = UUID.fromString(tmp);
         }
+
+        loadConfig(context);
+    }
+
+    private static String getJsonString(Context context) {
+        String jsonString;
+        try {
+            InputStream is = context.getAssets().open("feature-flags.json");
+
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+
+            jsonString = new String(buffer, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            Log.e(TAG, "Unable to load feature flags file", e);
+            return null;
+        }
+
+        return jsonString;
+    }
+
+    private static void readIntoMap(String rawJson) {
+        // Read JSON
+        Gson gson = new Gson();
+        Type type = new TypeToken<HashMap<String, Integer>>() {
+        }.getType();
+        Log.d(TAG, rawJson);
+        HashMap<String, Integer> map = gson.fromJson(rawJson, type);
+
+        if (features == null) {
+            features = new HashMap<>();
+        }
+        features.putAll(map);
+    }
+
+    private static void loadDefaults(Context context) {
+        String rawFlags = getJsonString(context);
+        readIntoMap(rawFlags);
+    }
+
+    private static void loadFromSharedPrefs(Context context) {
+        SharedPreferences sp = context.getSharedPreferences(sp_name, Context.MODE_PRIVATE);
+        String rawFlags = sp.getString(sp_featureFlagsMap, null);
+
+        if (rawFlags == null) {
+            return;
+        }
+
+        readIntoMap(rawFlags);
+    }
+
+    private static void saveToSharedPrefs(Context context) {
+        Gson gson = new Gson();
+        context
+                .getSharedPreferences(sp_name, Context.MODE_PRIVATE)
+                .edit()
+                .putString(sp_featureFlagsMap, gson.toJson(features))
+                .apply();
+    }
+
+    private static void loadConfig(Context context) {
+        // Load default flags if missing from shared prefs
+        loadDefaults(context);
+        loadFromSharedPrefs(context);
+        saveToSharedPrefs(context);
+    }
+
+    public static Integer getFeatureFlagValue(String name) {
+        if (!features.containsKey(name)) {
+            // TODO replace throwing exception with predetermined value of flag (think about it)
+            throw new RuntimeException("No flag with this name exit");
+        }
+        return features.get(name);
+    }
+
+    public static void setFeatureFlagValue(String name, Integer value) {
+        if (features == null) {
+            throw new RuntimeException("Feature flag map is null");
+        }
+        Log.d(TAG, String.format("Add flag %s: %s", name, value));
+        features.put(name, value);
+    }
+
+    public static void commitChanges(Context context) {
+        Log.d(TAG, "Save changes to shared prefs");
+        saveToSharedPrefs(context);
     }
 
     public void heartbeat(Context context) {

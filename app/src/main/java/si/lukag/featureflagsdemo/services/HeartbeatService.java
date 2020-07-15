@@ -15,11 +15,11 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import si.lukag.featureflagsdemo.config.FeatureFlagsModule;
 import si.lukag.featureflagsdemo.models.RuleDto;
 import si.lukag.featureflagsdemo.retrofit.APICalls;
 import si.lukag.featureflagsdemo.retrofit.RetrofitFactory;
 
-import static si.lukag.featureflagsdemo.config.Config.APP_ID;
 import static si.lukag.featureflagsdemo.config.Config.BASE_URL;
 import static si.lukag.featureflagsdemo.config.Config.sp_clientId;
 import static si.lukag.featureflagsdemo.config.Config.sp_name;
@@ -51,6 +51,7 @@ public class HeartbeatService extends JobIntentService {
                 if (response.body() != null) {
                     if (response.isSuccessful()) {
                         Log.d(TAG, response.body().toString());
+                        saveFlags(response.body());
                     }
                 }
             }
@@ -60,5 +61,12 @@ public class HeartbeatService extends JobIntentService {
                 Log.e(TAG, "Error", t);
             }
         });
+    }
+
+    private void saveFlags(List<RuleDto> list) {
+        list.forEach(rule -> {
+            FeatureFlagsModule.setFeatureFlagValue(rule.getName(), rule.getValue());
+        });
+        FeatureFlagsModule.commitChanges(this);
     }
 }
