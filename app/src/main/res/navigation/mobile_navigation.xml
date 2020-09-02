@@ -20,6 +20,6 @@
     <fragment
         android:id="@+id/navigation_info"
         android:name="si.lukag.featureflagsdemo.ui.info.InfoFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:label="@string/title_info"
+        tools:layout="@layout/fragment_info" />
 </navigation>
