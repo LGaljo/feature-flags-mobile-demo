@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Feature Flags Demo</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_plus">Plus</string>
+    <string name="title_info">Info</string>
+    <string name="refresh">Refresh</string>
+    <string name="click_to_fetch_latest_values_for_this_user">Click to fetch latest values for this user</string>
 </resources>
