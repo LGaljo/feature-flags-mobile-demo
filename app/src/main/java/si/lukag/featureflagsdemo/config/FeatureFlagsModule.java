@@ -17,12 +17,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import si.lukag.featureflagsdemo.models.RuleDto;
 import si.lukag.featureflagsdemo.retrofit.APICalls;
 import si.lukag.featureflagsdemo.retrofit.RetrofitFactory;
 import si.lukag.featureflagsdemo.services.HeartbeatReceiver;
@@ -43,7 +46,7 @@ public class FeatureFlagsModule {
     private Retrofit retrofit = RetrofitFactory.getInstance(BASE_URL);
     private APICalls apiCalls = retrofit.create(APICalls.class);
 
-    private static HashMap<String, Integer> features;
+    private static HashMap<String, RuleDto> features;
 
     public static FeatureFlagsModule getInstance(Context context) {
         if (ffm == null) {
@@ -89,10 +92,10 @@ public class FeatureFlagsModule {
     private static void readIntoMap(String rawJson) {
         // Read JSON
         Gson gson = new Gson();
-        Type type = new TypeToken<HashMap<String, Integer>>() {
+        Type type = new TypeToken<HashMap<String, RuleDto>>() {
         }.getType();
         Log.d(TAG, rawJson);
-        HashMap<String, Integer> map = gson.fromJson(rawJson, type);
+        HashMap<String, RuleDto> map = gson.fromJson(rawJson, type);
 
         if (features == null) {
             features = new HashMap<>();
@@ -137,19 +140,24 @@ public class FeatureFlagsModule {
             // TODO replace throwing exception with predetermined value of flag (think about it)
             throw new RuntimeException("No flag with this name exit");
         }
-        return features.get(name);
+        return features.get(name).getValue();
     }
 
-    public static void setFeatureFlagValue(String name, Integer value) {
+    public static void setFeatureFlagValue(String name, RuleDto rule) {
         if (features == null) {
             throw new RuntimeException("Feature flag map is null");
         }
-        Log.d(TAG, String.format("Add flag %s: %s", name, value));
-        features.put(name, value);
+        Log.d(TAG, String.format("Add flag %s: %s", name, rule.getValue()));
+        features.put(name, rule);
     }
 
     public static void commitChanges(Context context) {
         Log.d(TAG, "Save changes to shared prefs");
+        saveToSharedPrefs(context);
+    }
+
+    public void changeRuleValue(String name, Integer value, Context context) {
+        Objects.requireNonNull(features.get(name)).setValue(value);
         saveToSharedPrefs(context);
     }
 
@@ -174,6 +182,10 @@ public class FeatureFlagsModule {
                 Log.e(TAG, "Error", t);
             }
         });
+    }
+
+    public HashMap<String, RuleDto> getFFs() {
+        return features;
     }
 
     public static void enqueueWork(Context context) {

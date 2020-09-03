@@ -4,25 +4,55 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import si.lukag.featureflagsdemo.R;
+import si.lukag.featureflagsdemo.adapters.FFAdapter;
+import si.lukag.featureflagsdemo.config.FeatureFlagsModule;
+import si.lukag.featureflagsdemo.models.DataType;
+import si.lukag.featureflagsdemo.models.RuleDto;
 
 public class HomeFragment extends Fragment {
     public static final String TAG = HomeFragment.class.getSimpleName();
 
-    private HomeViewModel homeViewModel;
+    @BindView(R.id.ff_list)
+    RecyclerView ff_list;
+    private RecyclerView.LayoutManager layoutManager;
+    private FFAdapter ffAdapter;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
-        final TextView textView = root.findViewById(R.id.text_home);
-        homeViewModel.getText().observe(getViewLifecycleOwner(), s -> textView.setText(s));
+        ButterKnife.bind(this, root);
+        ff_list.hasFixedSize();
+
+        Integer decision = FeatureFlagsModule.getFeatureFlagValue("Flag1");
+        if (decision == 1) {
+            layoutManager = new GridLayoutManager(getContext(), 2);
+            ff_list.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.HORIZONTAL));
+        } else {
+            layoutManager = new LinearLayoutManager(getContext());
+        }
+        ff_list.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+
+        ff_list.setLayoutManager(layoutManager);
+        ffAdapter = new FFAdapter(getContext());
+        ff_list.setItemAnimator(new DefaultItemAnimator());
+        ff_list.setAdapter(ffAdapter);
+
         return root;
     }
 }

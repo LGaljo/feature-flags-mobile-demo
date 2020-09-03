@@ -65,7 +65,7 @@ public class HeartbeatService extends JobIntentService {
 
     private void saveFlags(List<RuleDto> list) {
         list.forEach(rule -> {
-            FeatureFlagsModule.setFeatureFlagValue(rule.getName(), rule.getValue());
+            FeatureFlagsModule.setFeatureFlagValue(rule.getName(), rule);
         });
         FeatureFlagsModule.commitChanges(this);
     }

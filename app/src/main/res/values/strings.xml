@@ -6,4 +6,6 @@
     <string name="title_info">Info</string>
     <string name="refresh">Refresh</string>
     <string name="click_to_fetch_latest_values_for_this_user">Click to fetch latest values for this user</string>
+    <string name="ff_dialog_title">Change rule value for</string>
+    <string name="ff_dialog_message">You can change the value of the rule.</string>
 </resources>
