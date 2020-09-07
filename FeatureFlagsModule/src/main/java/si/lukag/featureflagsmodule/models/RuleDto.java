@@ -1,4 +1,4 @@
-package si.lukag.featureflagsdemo.models;
+package si.lukag.featureflagsmodule.models;
 
 public class RuleDto {
     private Long id;

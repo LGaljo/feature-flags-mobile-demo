@@ -13,17 +13,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import si.lukag.featureflagsdemo.R;
 import si.lukag.featureflagsdemo.adapters.FFAdapter;
-import si.lukag.featureflagsdemo.config.FeatureFlagsModule;
-import si.lukag.featureflagsdemo.models.DataType;
-import si.lukag.featureflagsdemo.models.RuleDto;
+import si.lukag.featureflagsmodule.FeatureFlagsModule;
 
 public class HomeFragment extends Fragment {
     public static final String TAG = HomeFragment.class.getSimpleName();
@@ -39,7 +33,7 @@ public class HomeFragment extends Fragment {
         ButterKnife.bind(this, root);
         ff_list.hasFixedSize();
 
-        Integer decision = FeatureFlagsModule.getFeatureFlagValue("Flag1");
+        Integer decision = FeatureFlagsModule.isEnabled("ui_type");
         if (decision == 1) {
             layoutManager = new GridLayoutManager(getContext(), 2);
             ff_list.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.HORIZONTAL));

@@ -1,4 +1,4 @@
-package si.lukag.featureflagsdemo;
+package si.lukag.featureflagsmodule;
 
 import org.junit.Test;
 

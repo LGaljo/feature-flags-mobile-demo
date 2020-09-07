@@ -1,10 +1,9 @@
-package si.lukag.featureflagsdemo.config;
+package si.lukag.featureflagsmodule;
 
 public class Config {
-    public static final String BASE_URL = "http://10.0.2.2:8081/v1/";
-    public static final String APP_ID = "1";
-
     public static String sp_name = "feature_flags";
+    public static String sp_appName = "ff_app_name";
+    public static String sp_baseUrl = "ff_base_url";
     public static String sp_clientId = "ff_client_id";
     public static String sp_featureFlagsMap = "ff_feature_flags_map";
 }

@@ -1,4 +1,4 @@
-package si.lukag.featureflagsdemo.services;
+package si.lukag.featureflagsmodule.services;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

@@ -1,11 +1,6 @@
 package si.lukag.featureflagsdemo;
 
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -13,7 +8,9 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import si.lukag.featureflagsdemo.config.FeatureFlagsModule;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import si.lukag.featureflagsmodule.FeatureFlagsModule;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,8 +20,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main2);
         BottomNavigationView navView = findViewById(R.id.nav_view);
 
-        Integer decision = FeatureFlagsModule.getFeatureFlagValue("Flag2");
-        if (decision == 0) {
+        Integer decision = FeatureFlagsModule.isEnabled("plus_content", 0);
+        if (decision != 1) {
             navView.getMenu().removeItem(R.id.navigation_plus);
         }
 

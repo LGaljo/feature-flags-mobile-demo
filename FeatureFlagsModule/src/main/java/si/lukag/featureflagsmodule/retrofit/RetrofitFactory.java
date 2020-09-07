@@ -1,4 +1,4 @@
-package si.lukag.featureflagsdemo.retrofit;
+package si.lukag.featureflagsmodule.retrofit;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

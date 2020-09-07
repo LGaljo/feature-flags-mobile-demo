@@ -1,4 +1,4 @@
-package si.lukag.featureflagsdemo;
+package si.lukag.featureflagsmodule;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("si.lukag.featureflagsdemo", appContext.getPackageName());
+        assertEquals("si.lukag.featureflagsmodule.test", appContext.getPackageName());
     }
 }

@@ -13,23 +13,22 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity
-            android:name=".MainActivity">
+
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
         <service
-            android:name=".services.HeartbeatService"
+            android:name="si.lukag.featureflagsmodule.services.HeartbeatService"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
-        <receiver android:name=".services.HeartbeatReceiver" />
+        <receiver android:name="si.lukag.featureflagsmodule.services.HeartbeatReceiver" />
     </application>
 
 </manifest>

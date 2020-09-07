@@ -1,14 +1,11 @@
 package si.lukag.featureflagsdemo.adapters;
 
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,8 +22,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import si.lukag.featureflagsdemo.MainActivity;
 import si.lukag.featureflagsdemo.R;
-import si.lukag.featureflagsdemo.config.FeatureFlagsModule;
-import si.lukag.featureflagsdemo.models.RuleDto;
+import si.lukag.featureflagsmodule.FeatureFlagsModule;
+import si.lukag.featureflagsmodule.models.RuleDto;
+
+import static si.lukag.featureflagsdemo.StaticConfig.APP_NAME;
+import static si.lukag.featureflagsdemo.StaticConfig.BASE_URL;
 
 public class FFAdapter extends RecyclerView.Adapter<FFAdapter.ffViewHolder> {
     private final FeatureFlagsModule ffm;

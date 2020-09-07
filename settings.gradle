@@ -1,2 +1,3 @@
+include ':FeatureFlagsModule'
 include ':app'
 rootProject.name = "Feature Flags Demo"

@@ -1,4 +1,5 @@
-package si.lukag.featureflagsdemo.config;
+package si.lukag.featureflagsmodule;
+
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -17,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
@@ -25,40 +25,60 @@ import java.util.UUID;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import si.lukag.featureflagsdemo.models.RuleDto;
-import si.lukag.featureflagsdemo.retrofit.APICalls;
-import si.lukag.featureflagsdemo.retrofit.RetrofitFactory;
-import si.lukag.featureflagsdemo.services.HeartbeatReceiver;
+import si.lukag.featureflagsmodule.models.RuleDto;
+import si.lukag.featureflagsmodule.retrofit.APICalls;
+import si.lukag.featureflagsmodule.retrofit.RetrofitFactory;
+import si.lukag.featureflagsmodule.services.HeartbeatReceiver;
 
-import static si.lukag.featureflagsdemo.config.Config.APP_ID;
-import static si.lukag.featureflagsdemo.config.Config.BASE_URL;
-import static si.lukag.featureflagsdemo.config.Config.sp_clientId;
-import static si.lukag.featureflagsdemo.config.Config.sp_featureFlagsMap;
-import static si.lukag.featureflagsdemo.config.Config.sp_name;
+import static si.lukag.featureflagsmodule.Config.sp_appName;
+import static si.lukag.featureflagsmodule.Config.sp_baseUrl;
+import static si.lukag.featureflagsmodule.Config.sp_clientId;
+import static si.lukag.featureflagsmodule.Config.sp_featureFlagsMap;
+import static si.lukag.featureflagsmodule.Config.sp_name;
 
 public class FeatureFlagsModule {
     private static final String TAG = FeatureFlagsModule.class.getSimpleName();
+
+    public static String BASE_URL;
+    public static String APP_NAME;
 
     private static FeatureFlagsModule ffm;
 
     private static UUID clientID;
 
-    private Retrofit retrofit = RetrofitFactory.getInstance(BASE_URL);
-    private APICalls apiCalls = retrofit.create(APICalls.class);
+    private static APICalls apiCalls;
 
     private static HashMap<String, RuleDto> features;
 
     public static FeatureFlagsModule getInstance(Context context) {
+        readFromSharedPrefs(context);
+
         if (ffm == null) {
             ffm = new FeatureFlagsModule();
+
+            init(context);
         }
-        init(context);
+
         return ffm;
     }
 
     private static void init(Context context) {
+        Retrofit retrofit = RetrofitFactory.getInstance(BASE_URL);
+        apiCalls = retrofit.create(APICalls.class);
+
+        loadConfig(context);
+    }
+
+    private static void readFromSharedPrefs(Context context) {
         SharedPreferences sp = context.getSharedPreferences(sp_name, Context.MODE_PRIVATE);
+
+        APP_NAME = sp.getString(sp_appName, null);
+        BASE_URL = sp.getString(sp_baseUrl, null);
         String tmp = sp.getString(sp_clientId, null);
+
+        if (APP_NAME == null || BASE_URL == null) {
+            throw new RuntimeException("App name or base url should not be null");
+        }
 
         if (tmp == null) {
             clientID = UUID.randomUUID();
@@ -66,8 +86,6 @@ public class FeatureFlagsModule {
         } else {
             clientID = UUID.fromString(tmp);
         }
-
-        loadConfig(context);
     }
 
     private static String getJsonString(Context context) {
@@ -135,15 +153,23 @@ public class FeatureFlagsModule {
         saveToSharedPrefs(context);
     }
 
-    public static Integer getFeatureFlagValue(String name) {
+    // If flag not found throw an exception
+    public static Integer isEnabled(String name) {
         if (!features.containsKey(name)) {
-            // TODO replace throwing exception with predetermined value of flag (think about it)
             throw new RuntimeException("No flag with this name exit");
         }
-        return features.get(name).getValue();
+        return Objects.requireNonNull(features.get(name)).getValue();
     }
 
-    public static void setFeatureFlagValue(String name, RuleDto rule) {
+    // Instead of throwing exception predetermined value of flag is returned
+    public static Integer isEnabled(String name, Integer defaultValue) {
+        if (!features.containsKey(name)) {
+            return defaultValue;
+        }
+        return Objects.requireNonNull(features.get(name)).getValue();
+    }
+
+    public void setFeatureFlagValue(String name, RuleDto rule) {
         if (features == null) {
             throw new RuntimeException("Feature flag map is null");
         }
@@ -151,7 +177,7 @@ public class FeatureFlagsModule {
         features.put(name, rule);
     }
 
-    public static void commitChanges(Context context) {
+    public void commitChanges(Context context) {
         Log.d(TAG, "Save changes to shared prefs");
         saveToSharedPrefs(context);
     }
@@ -163,17 +189,16 @@ public class FeatureFlagsModule {
 
     public void heartbeat(Context context) {
         Log.d(TAG, "Send heartbeat");
-        Call<Response<String>> call = apiCalls.registerUser(clientID.toString(), APP_ID);
+
+        Call<Response<String>> call = apiCalls.registerUser(clientID.toString(), APP_NAME);
         call.enqueue(new retrofit2.Callback<Response<String>>() {
             @Override
             public void onResponse(@NotNull Call<Response<String>> call, @NotNull Response<Response<String>> response) {
                 if (response.body() != null) {
                     if (response.isSuccessful()) {
                         Log.d(TAG, "Successfully sent a heartbeat");
-                        // TODO schedule service wake up
                         enqueueWork(context);
                     }
-                    Log.d(TAG, "Sent a heartbeat" + response.raw().toString());
                 }
             }
 
@@ -188,7 +213,7 @@ public class FeatureFlagsModule {
         return features;
     }
 
-    public static void enqueueWork(Context context) {
+    public void enqueueWork(Context context) {
         Log.d(TAG, "Work enqueued");
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 

@@ -1,23 +1,20 @@
 {
-  "Flag1": {
-    "name": "Flag1",
-    "id": 1,
-    "description": "This is a description for Flag1",
+  "ui_type": {
+    "name": "ui_type",
+    "description": "Controls which view is shown. Linear or grid type of list.",
     "value": 0,
-    "dataType": "INT"
+    "dataType": "BOOL"
   },
-  "Flag2": {
-    "name": "Flag2",
-    "id": 2,
-    "description": "This is a description for Flag2",
+  "plus_content": {
+    "name": "plus_content",
+    "description": "Only specific users are allowed to view plus page.",
     "value": 1,
-    "dataType": "INT"
+    "dataType": "BOOL"
   },
-  "Flag3": {
-    "name": "Flag3",
-    "id": 3,
-    "description": "This is a description for Flag3",
+  "future_content": {
+    "name": "future_content",
+    "description": "Currently unused feature flag.",
     "value": 0,
-    "dataType": "INT"
+    "dataType": "BOOL"
   }
 }
