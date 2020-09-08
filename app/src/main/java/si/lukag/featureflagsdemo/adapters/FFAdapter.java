@@ -25,9 +25,6 @@ import si.lukag.featureflagsdemo.R;
 import si.lukag.featureflagsmodule.FeatureFlagsModule;
 import si.lukag.featureflagsmodule.models.RuleDto;
 
-import static si.lukag.featureflagsdemo.StaticConfig.APP_NAME;
-import static si.lukag.featureflagsdemo.StaticConfig.BASE_URL;
-
 public class FFAdapter extends RecyclerView.Adapter<FFAdapter.ffViewHolder> {
     private final FeatureFlagsModule ffm;
     private ArrayList<RuleDto> rules;
@@ -60,7 +57,7 @@ public class FFAdapter extends RecyclerView.Adapter<FFAdapter.ffViewHolder> {
 
             dialog.setButton(DialogInterface.BUTTON_POSITIVE, "Save", (dialog1, which) -> {
                 ffm.changeRuleValue(ruleDto.getName(), Integer.decode(editText.getText().toString()), context);
-                rules = toArrayList(ffm.getFFs());
+                rules = toArrayList(ffm.getFeatureFlags());
                 notifyDataSetChanged();
 
                 Intent i = new Intent(context, MainActivity.class);
@@ -77,7 +74,7 @@ public class FFAdapter extends RecyclerView.Adapter<FFAdapter.ffViewHolder> {
 
     public FFAdapter(Context context) {
         this.ffm = FeatureFlagsModule.getInstance(context);
-        this.rules = toArrayList(ffm.getFFs());
+        this.rules = toArrayList(ffm.getFeatureFlags());
         this.context = context;
     }
 

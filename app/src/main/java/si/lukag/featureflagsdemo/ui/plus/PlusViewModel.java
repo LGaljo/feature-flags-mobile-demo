@@ -11,7 +11,7 @@ public class PlusViewModel extends ViewModel {
 
     public PlusViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This Plus fragment is seen only when Flag2 is set to 1. Here is a joke for you!");
+        mText.setValue("This Plus fragment is seen only when plus_content is set to 1. Here is a joke for you!");
 
         joke = new MutableLiveData<>();
         joke.setValue(

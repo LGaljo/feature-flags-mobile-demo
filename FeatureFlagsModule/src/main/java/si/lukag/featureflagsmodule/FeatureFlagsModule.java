@@ -39,15 +39,11 @@ import static si.lukag.featureflagsmodule.Config.sp_name;
 public class FeatureFlagsModule {
     private static final String TAG = FeatureFlagsModule.class.getSimpleName();
 
+    private static FeatureFlagsModule ffm;
     public static String BASE_URL;
     public static String APP_NAME;
-
-    private static FeatureFlagsModule ffm;
-
     private static UUID clientID;
-
     private static APICalls apiCalls;
-
     private static HashMap<String, RuleDto> features;
 
     public static FeatureFlagsModule getInstance(Context context) {
@@ -55,6 +51,7 @@ public class FeatureFlagsModule {
 
         if (ffm == null) {
             ffm = new FeatureFlagsModule();
+            features = new HashMap<>();
 
             init(context);
         }
@@ -88,7 +85,7 @@ public class FeatureFlagsModule {
         }
     }
 
-    private static String getJsonString(Context context) {
+    private static String getDefaultConfigFromJson(Context context) {
         String jsonString;
         try {
             InputStream is = context.getAssets().open("feature-flags.json");
@@ -108,36 +105,19 @@ public class FeatureFlagsModule {
     }
 
     private static void readIntoMap(String rawJson) {
+        if (rawJson == null) {
+            return;
+        }
+
         // Read JSON
         Gson gson = new Gson();
         Type type = new TypeToken<HashMap<String, RuleDto>>() {
         }.getType();
-        Log.d(TAG, rawJson);
-        HashMap<String, RuleDto> map = gson.fromJson(rawJson, type);
 
-        if (features == null) {
-            features = new HashMap<>();
-        }
-        features.putAll(map);
+        features.putAll(gson.fromJson(rawJson, type));
     }
 
-    private static void loadDefaults(Context context) {
-        String rawFlags = getJsonString(context);
-        readIntoMap(rawFlags);
-    }
-
-    private static void loadFromSharedPrefs(Context context) {
-        SharedPreferences sp = context.getSharedPreferences(sp_name, Context.MODE_PRIVATE);
-        String rawFlags = sp.getString(sp_featureFlagsMap, null);
-
-        if (rawFlags == null) {
-            return;
-        }
-
-        readIntoMap(rawFlags);
-    }
-
-    private static void saveToSharedPrefs(Context context) {
+    public static void saveToSharedPrefs(Context context) {
         Gson gson = new Gson();
         context
                 .getSharedPreferences(sp_name, Context.MODE_PRIVATE)
@@ -148,33 +128,15 @@ public class FeatureFlagsModule {
 
     private static void loadConfig(Context context) {
         // Load default flags if missing from shared prefs
-        loadDefaults(context);
-        loadFromSharedPrefs(context);
+        String rawFlags = getDefaultConfigFromJson(context);
+        readIntoMap(rawFlags);
+
+        // Read flags from shared preferences
+        SharedPreferences sp = context.getSharedPreferences(sp_name, Context.MODE_PRIVATE);
+        rawFlags = sp.getString(sp_featureFlagsMap, null);
+        readIntoMap(rawFlags);
+
         saveToSharedPrefs(context);
-    }
-
-    // If flag not found throw an exception
-    public static Integer isEnabled(String name) {
-        if (!features.containsKey(name)) {
-            throw new RuntimeException("No flag with this name exit");
-        }
-        return Objects.requireNonNull(features.get(name)).getValue();
-    }
-
-    // Instead of throwing exception predetermined value of flag is returned
-    public static Integer isEnabled(String name, Integer defaultValue) {
-        if (!features.containsKey(name)) {
-            return defaultValue;
-        }
-        return Objects.requireNonNull(features.get(name)).getValue();
-    }
-
-    public void setFeatureFlagValue(String name, RuleDto rule) {
-        if (features == null) {
-            throw new RuntimeException("Feature flag map is null");
-        }
-        Log.d(TAG, String.format("Add flag %s: %s", name, rule.getValue()));
-        features.put(name, rule);
     }
 
     public void commitChanges(Context context) {
@@ -209,15 +171,40 @@ public class FeatureFlagsModule {
         });
     }
 
-    public HashMap<String, RuleDto> getFFs() {
+    public HashMap<String, RuleDto> getFeatureFlags() {
         return features;
+    }
+
+    // If flag not found throw an exception
+    public static Integer isEnabled(String name) {
+        if (!features.containsKey(name)) {
+            throw new RuntimeException("No flag with this name exits");
+        }
+        return Objects.requireNonNull(features.get(name)).getValue();
+    }
+
+    // Instead of throwing exception predetermined value of flag is returned
+    public static Integer isEnabled(String name, Integer defaultValue) {
+        if (!features.containsKey(name)) {
+            return defaultValue;
+        }
+        return Objects.requireNonNull(features.get(name)).getValue();
+    }
+
+    // Temporarily change the value of the flag
+    public void setFeatureFlagValue(String name, RuleDto rule) {
+        if (features == null) {
+            throw new RuntimeException("Feature flag map is null");
+        }
+        Log.d(TAG, String.format("Add flag %s: %s", name, rule.getValue()));
+        features.put(name, rule);
     }
 
     public void enqueueWork(Context context) {
         Log.d(TAG, "Work enqueued");
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
-        int sync_interval = 1000 * 30; // 30 sec
+        int sync_interval = 1000 * 60 * 12; // 12 min
 
         // Set alarm for next wakeup
         Intent intent = new Intent(context, HeartbeatReceiver.class);
